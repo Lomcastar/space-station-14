@@ -11,5 +11,6 @@ documentlog-command-person = { $name } ({ $job }, { $category })
 documentlog-command-event-stamped = { $time }  stamp: { $stamp } [{ $category }] — { $actor }
 documentlog-command-event-marked = { $time }  mark: { $mark } — { $actor }
 documentlog-command-event-marked-retro = (before registration)  mark: { $mark }
+documentlog-command-readers = readers ({ $count }): { $readers }
 documentlog-command-mark-approve = APPROVED
 documentlog-command-mark-deny = DENIED

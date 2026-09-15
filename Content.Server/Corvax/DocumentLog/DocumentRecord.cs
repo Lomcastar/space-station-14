@@ -11,6 +11,7 @@ public sealed class DocumentRecord
     public DocumentPerson Author = default!;
     public int? ParentId;
     public List<DocumentEvent> Events = new();
+    public List<DocumentReader> Readers = new();
     public string Text = string.Empty;
     public DocumentFate Fate = DocumentFate.Intact;
 }
@@ -23,6 +24,8 @@ public sealed record DocumentPerson(
     string JobTitle,
     ProtoId<DocumentCategoryPrototype> Category,
     List<ProtoId<DocumentCategoryPrototype>> Categories);
+
+public sealed record DocumentReader(DocumentPerson Person, TimeSpan Time);
 
 public sealed class DocumentEvent
 {

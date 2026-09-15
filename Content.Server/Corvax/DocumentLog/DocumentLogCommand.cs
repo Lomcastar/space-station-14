@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using Content.Server.Administration;
 using Content.Shared.Administration;
@@ -75,6 +76,14 @@ public sealed class DocumentLogCommand : LocalizedEntityCommands
         {
             sb.Append("    ");
             sb.AppendLine(FormatEvent(ev));
+        }
+
+        if (record.Readers.Count > 0)
+        {
+            sb.Append("    ");
+            sb.AppendLine(Loc.GetString("documentlog-command-readers",
+                ("count", record.Readers.Count),
+                ("readers", string.Join(", ", record.Readers.Select(r => FormatPerson(r.Person))))));
         }
 
         return sb.ToString().TrimEnd();

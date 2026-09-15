@@ -31,6 +31,7 @@ public sealed class DocumentLogSystem : EntitySystem
 
     private readonly SortedDictionary<int, DocumentRecord> _records = new();
     private readonly Dictionary<string, DocumentStampPrototype> _marksByStampedName = new();
+    private readonly Dictionary<(EntityUid Paper, EntityUid Actor), TimeSpan> _openedAt = new();
     private int _nextId = 1;
     private bool _recording = true;
 
@@ -42,6 +43,8 @@ public sealed class DocumentLogSystem : EntitySystem
         base.Initialize();
 
         SubscribeLocalEvent<PaperComponent, PaperStampedEvent>(OnPaperStamped);
+        SubscribeLocalEvent<PaperComponent, BoundUIOpenedEvent>(OnPaperOpened);
+        SubscribeLocalEvent<PaperComponent, BoundUIClosedEvent>(OnPaperClosed);
         SubscribeLocalEvent<RoundStartedEvent>(OnRoundStarted);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
@@ -69,6 +72,7 @@ public sealed class DocumentLogSystem : EntitySystem
     public void Clear()
     {
         _records.Clear();
+        _openedAt.Clear();
         _nextId = 1;
     }
 
@@ -112,6 +116,27 @@ public sealed class DocumentLogSystem : EntitySystem
 
         var limit = _cfg.GetCVar(CCCVars.DocumentLogMaxTextLength);
         record.Text = paper.Comp.Content.Length <= limit ? paper.Comp.Content : paper.Comp.Content[..limit];
+    }
+
+    private void OnPaperOpened(Entity<PaperComponent> paper, ref BoundUIOpenedEvent args)
+    {
+        if (args.UiKey is PaperComponent.PaperUiKey.Key)
+            _openedAt[(paper, args.Actor)] = _gameTicker.RoundDuration();
+    }
+
+    private void OnPaperClosed(Entity<PaperComponent> paper, ref BoundUIClosedEvent args)
+    {
+        if (args.UiKey is not PaperComponent.PaperUiKey.Key || !_openedAt.Remove((paper, args.Actor), out var openedAt))
+            return;
+
+        if (!_recording || !TryGetRecord(paper, out var record))
+            return;
+
+        var now = _gameTicker.RoundDuration();
+        if ((now - openedAt).TotalSeconds < _cfg.GetCVar(CCCVars.DocumentLogReadThreshold))
+            return;
+
+        record.Readers.Add(new DocumentReader(ResolvePerson(args.Actor), now));
     }
 
     private DocumentRecord CreateRecord(Entity<PaperComponent> paper, TimeSpan now, DocumentPerson author)
