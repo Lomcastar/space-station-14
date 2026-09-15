@@ -43,27 +43,3 @@ public sealed class DocumentEvent
     /// </summary>
     public bool Retro;
 }
-
-public enum DocumentEventType : byte
-{
-    Stamped,
-    Marked,
-    Forged,
-    Sealed,
-    Torn,
-    Destroyed,
-    Sent,
-    Copied,
-    Received,
-    Printed,
-}
-
-public enum DocumentFate : byte
-{
-    Intact,
-    Burned,
-    Disposed,
-    Destroyed,
-    SentToCentcom,
-    EvacuatedToCentcom,
-}

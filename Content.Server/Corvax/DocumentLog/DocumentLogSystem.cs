@@ -22,7 +22,7 @@ namespace Content.Server.Corvax.DocumentLog;
 /// marks (approved / denied) only annotate an existing record. Records outlive the round
 /// restart and are cleared when the next round starts.
 /// </summary>
-public sealed class DocumentLogSystem : EntitySystem
+public sealed partial class DocumentLogSystem : EntitySystem
 {
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IComponentFactory _factory = default!;
@@ -60,6 +60,7 @@ public sealed class DocumentLogSystem : EntitySystem
         SubscribeLocalEvent<RoundStartedEvent>(OnRoundStarted);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
+        InitializeNetwork();
 
         BuildMarkLookup();
     }
