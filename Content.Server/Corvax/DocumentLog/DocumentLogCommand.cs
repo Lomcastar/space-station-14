@@ -75,7 +75,7 @@ public sealed class DocumentLogCommand : LocalizedEntityCommands
         foreach (var ev in record.Events)
         {
             sb.Append("    ");
-            sb.AppendLine(FormatEvent(ev));
+            sb.AppendLine(FormatEvent(record, ev));
         }
 
         if (record.Readers.Count > 0)
@@ -89,7 +89,7 @@ public sealed class DocumentLogCommand : LocalizedEntityCommands
         return sb.ToString().TrimEnd();
     }
 
-    private string FormatEvent(DocumentEvent ev)
+    private string FormatEvent(DocumentRecord record, DocumentEvent ev)
     {
         switch (ev.Type)
         {
@@ -110,6 +110,26 @@ public sealed class DocumentLogCommand : LocalizedEntityCommands
                     ("time", FormatTime(ev.Time)),
                     ("mark", mark),
                     ("actor", FormatPerson(ev.Actor)));
+
+            case DocumentEventType.Forged:
+                return Loc.GetString("documentlog-command-event-forged",
+                    ("time", FormatTime(ev.Time)),
+                    ("actor", FormatPerson(ev.Actor)));
+
+            case DocumentEventType.Sealed:
+                return Loc.GetString("documentlog-command-event-sealed",
+                    ("time", FormatTime(ev.Time)),
+                    ("actor", FormatPerson(ev.Actor)));
+
+            case DocumentEventType.Torn:
+                return Loc.GetString("documentlog-command-event-torn",
+                    ("time", FormatTime(ev.Time)),
+                    ("actor", FormatPerson(ev.Actor)));
+
+            case DocumentEventType.Destroyed:
+                return Loc.GetString("documentlog-command-event-destroyed",
+                    ("time", FormatTime(ev.Time)),
+                    ("fate", Loc.GetString($"documentlog-fate-{record.Fate.ToString().ToLowerInvariant()}")));
 
             default:
                 return ev.Type.ToString();

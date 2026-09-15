@@ -1,5 +1,6 @@
 using Content.Shared.DoAfter;
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Corvax.DocumentLog; // Corvax-DocumentLog
 using Content.Shared.Verbs;
 using Robust.Shared.Audio.Systems;
 using Content.Shared.Examine;
@@ -94,15 +95,25 @@ public sealed partial class EnvelopeSystem : EntitySystem
             _audioSystem.PlayPredicted(ent.Comp.SealSound, ent.Owner, args.User);
             ent.Comp.State = EnvelopeComponent.EnvelopeState.Sealed;
             Dirty(ent.Owner, ent.Comp);
+            RaiseStateChanged(ent, args.User); // Corvax-DocumentLog
         }
         else if (ent.Comp.State == EnvelopeComponent.EnvelopeState.Sealed)
         {
             _audioSystem.PlayPredicted(ent.Comp.TearSound, ent.Owner, args.User);
             ent.Comp.State = EnvelopeComponent.EnvelopeState.Torn;
             Dirty(ent.Owner, ent.Comp);
+            RaiseStateChanged(ent, args.User); // Corvax-DocumentLog
 
             if (_itemSlotsSystem.TryGetSlot(ent.Owner, ent.Comp.SlotId, out var slotComp))
                 _itemSlotsSystem.TryEjectToHands(ent.Owner, slotComp, args.User);
         }
     }
+
+    // Corvax-DocumentLog-Start
+    private void RaiseStateChanged(Entity<EnvelopeComponent> ent, EntityUid user)
+    {
+        var ev = new EnvelopeStateChangedEvent(user, ent.Comp.State);
+        RaiseLocalEvent(ent, ref ev);
+    }
+    // Corvax-DocumentLog-End
 }

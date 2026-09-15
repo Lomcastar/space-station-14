@@ -34,6 +34,7 @@ public sealed class DocumentEvent
     public DocumentPerson? Actor;
     public EntProtoId? Stamp;
     public DocumentStampKind StampKind;
+    public string? TextBefore;
 
     /// <summary>
     /// The mark was already on the paper when the record was created; who and when is unknown.
@@ -45,6 +46,10 @@ public enum DocumentEventType : byte
 {
     Stamped,
     Marked,
+    Forged,
+    Sealed,
+    Torn,
+    Destroyed,
 }
 
 public enum DocumentFate : byte

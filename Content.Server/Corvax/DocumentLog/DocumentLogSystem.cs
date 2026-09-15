@@ -1,9 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Shared.Access.Systems;
+using Content.Shared.Atmos.Components;
+using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Corvax.CCCVars;
 using Content.Shared.Corvax.DocumentLog;
 using Content.Shared.GameTicking;
+using Content.Shared.Materials;
 using Content.Shared.Mind;
 using Content.Shared.Paper;
 using Content.Shared.Roles;
@@ -26,6 +29,7 @@ public sealed class DocumentLogSystem : EntitySystem
     [Dependency] private SharedMindSystem _mind = default!;
     [Dependency] private SharedJobSystem _jobs = default!;
     [Dependency] private SharedIdCardSystem _idCard = default!;
+    [Dependency] private ItemSlotsSystem _itemSlots = default!;
 
     private static readonly ProtoId<DocumentCategoryPrototype> OtherCategory = "Other";
 
@@ -45,6 +49,10 @@ public sealed class DocumentLogSystem : EntitySystem
         SubscribeLocalEvent<PaperComponent, PaperStampedEvent>(OnPaperStamped);
         SubscribeLocalEvent<PaperComponent, BoundUIOpenedEvent>(OnPaperOpened);
         SubscribeLocalEvent<PaperComponent, BoundUIClosedEvent>(OnPaperClosed);
+        SubscribeLocalEvent<DocumentRecordComponent, PaperComponent.PaperInputTextMessage>(OnPaperWritten, after: new[] { typeof(PaperSystem) });
+        SubscribeLocalEvent<EnvelopeComponent, EnvelopeStateChangedEvent>(OnEnvelopeStateChanged);
+        SubscribeLocalEvent<DocumentRecordComponent, GotReclaimedEvent>(OnReclaimed);
+        SubscribeLocalEvent<DocumentRecordComponent, EntityTerminatingEvent>(OnTerminating);
         SubscribeLocalEvent<RoundStartedEvent>(OnRoundStarted);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
@@ -114,8 +122,7 @@ public sealed class DocumentLogSystem : EntitySystem
             StampKind = stamp.Kind,
         });
 
-        var limit = _cfg.GetCVar(CCCVars.DocumentLogMaxTextLength);
-        record.Text = paper.Comp.Content.Length <= limit ? paper.Comp.Content : paper.Comp.Content[..limit];
+        UpdateText(record, paper);
     }
 
     private void OnPaperOpened(Entity<PaperComponent> paper, ref BoundUIOpenedEvent args)
@@ -137,6 +144,88 @@ public sealed class DocumentLogSystem : EntitySystem
             return;
 
         record.Readers.Add(new DocumentReader(ResolvePerson(args.Actor), now));
+    }
+
+    // A registered paper is stamped, so any text change here got past the stamp lock.
+    private void OnPaperWritten(Entity<DocumentRecordComponent> paper, ref PaperComponent.PaperInputTextMessage args)
+    {
+        if (!_recording
+            || !_records.TryGetValue(paper.Comp.RecordId, out var record)
+            || !TryComp<PaperComponent>(paper, out var paperComp)
+            || paperComp.Content == record.Text)
+            return;
+
+        record.Events.Add(new DocumentEvent
+        {
+            Time = _gameTicker.RoundDuration(),
+            Type = DocumentEventType.Forged,
+            Actor = ResolvePerson(args.Actor),
+            TextBefore = record.Text,
+        });
+        UpdateText(record, (paper, paperComp));
+    }
+
+    private void OnEnvelopeStateChanged(Entity<EnvelopeComponent> envelope, ref EnvelopeStateChangedEvent args)
+    {
+        if (!_recording)
+            return;
+
+        DocumentEventType type;
+        switch (args.State)
+        {
+            case EnvelopeComponent.EnvelopeState.Sealed:
+                type = DocumentEventType.Sealed;
+                break;
+            case EnvelopeComponent.EnvelopeState.Torn:
+                type = DocumentEventType.Torn;
+                break;
+            default:
+                return;
+        }
+
+        if (!_itemSlots.TryGetSlot(envelope.Owner, envelope.Comp.SlotId, out var slot)
+            || slot.Item is not { } letter
+            || !TryGetRecord(letter, out var record))
+            return;
+
+        record.Events.Add(new DocumentEvent
+        {
+            Time = _gameTicker.RoundDuration(),
+            Type = type,
+            Actor = ResolvePerson(args.User),
+        });
+    }
+
+    private void OnReclaimed(Entity<DocumentRecordComponent> paper, ref GotReclaimedEvent args)
+    {
+        if (_recording && _records.TryGetValue(paper.Comp.RecordId, out var record))
+            record.Fate = DocumentFate.Disposed;
+    }
+
+    // Round restart flushes every entity after _recording is cleared, so that does not count as destruction.
+    private void OnTerminating(Entity<DocumentRecordComponent> paper, ref EntityTerminatingEvent args)
+    {
+        if (!_recording || !_records.TryGetValue(paper.Comp.RecordId, out var record))
+            return;
+
+        if (record.Fate == DocumentFate.Intact)
+        {
+            record.Fate = TryComp<FlammableComponent>(paper, out var flammable) && flammable.OnFire
+                ? DocumentFate.Burned
+                : DocumentFate.Destroyed;
+        }
+
+        record.Events.Add(new DocumentEvent
+        {
+            Time = _gameTicker.RoundDuration(),
+            Type = DocumentEventType.Destroyed,
+        });
+    }
+
+    private void UpdateText(DocumentRecord record, Entity<PaperComponent> paper)
+    {
+        var limit = _cfg.GetCVar(CCCVars.DocumentLogMaxTextLength);
+        record.Text = paper.Comp.Content.Length <= limit ? paper.Comp.Content : paper.Comp.Content[..limit];
     }
 
     private DocumentRecord CreateRecord(Entity<PaperComponent> paper, TimeSpan now, DocumentPerson author)
