@@ -1,0 +1,14 @@
+document-category-Command = { department-Command }
+document-category-CentralCommand = { department-CentralCommand }
+document-category-Security = { department-Security }
+document-category-Engineering = { department-Engineering }
+document-category-Medical = { department-Medical }
+document-category-Science = { department-Science }
+document-category-Cargo = { department-Cargo }
+document-category-Legal = Legal
+document-category-Civilian = { department-Civilian }
+document-category-Silicon = { department-Silicon }
+document-category-Specific = { department-Specific }
+document-category-Other = Other
+document-category-Syndicate = Syndicate
+document-category-Wizard = Wizards

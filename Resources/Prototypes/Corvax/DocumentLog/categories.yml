@@ -1,0 +1,80 @@
+- type: documentCategory
+  id: Command
+  name: document-category-Command
+  color: "#334E6D"
+  weight: 1
+
+- type: documentCategory
+  id: CentralCommand
+  name: document-category-CentralCommand
+  color: "#0c344d"
+  weight: 50
+
+- type: documentCategory
+  id: Security
+  name: document-category-Security
+  color: "#DE3A3A"
+  weight: 10
+
+- type: documentCategory
+  id: Engineering
+  name: document-category-Engineering
+  color: "#EFB341"
+  weight: 10
+
+- type: documentCategory
+  id: Medical
+  name: document-category-Medical
+  color: "#52B4E9"
+  weight: 10
+
+- type: documentCategory
+  id: Science
+  name: document-category-Science
+  color: "#D381C9"
+  weight: 10
+
+- type: documentCategory
+  id: Cargo
+  name: document-category-Cargo
+  color: "#A46106"
+  weight: 10
+
+- type: documentCategory
+  id: Legal
+  name: document-category-Legal
+  color: "#0c344d"
+  weight: 10
+
+- type: documentCategory
+  id: Civilian
+  name: document-category-Civilian
+  color: "#9FED58"
+  weight: 10
+
+- type: documentCategory
+  id: Silicon
+  name: document-category-Silicon
+  color: "#D381C9"
+  weight: 10
+
+- type: documentCategory
+  id: Specific
+  name: document-category-Specific
+  color: "#9FED58"
+  weight: 5
+
+- type: documentCategory
+  id: Other
+  name: document-category-Other
+  color: "#7A8791"
+
+- type: documentCategory
+  id: Syndicate
+  name: document-category-Syndicate
+  color: "#850000"
+
+- type: documentCategory
+  id: Wizard
+  name: document-category-Wizard
+  color: "#881bc1"

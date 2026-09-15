@@ -1,0 +1,99 @@
+- type: documentStamp
+  id: RubberStampCaptain
+  categories: [ Command ]
+
+- type: documentStamp
+  id: RubberStampHop
+  categories: [ Civilian, Command ]
+
+- type: documentStamp
+  id: RubberStampCE
+  categories: [ Engineering, Command ]
+
+- type: documentStamp
+  id: RubberStampCMO
+  categories: [ Medical, Command ]
+
+- type: documentStamp
+  id: RubberStampRd
+  categories: [ Science, Command ]
+
+- type: documentStamp
+  id: RubberStampHos
+  categories: [ Security, Command ]
+
+- type: documentStamp
+  id: RubberStampQm
+  categories: [ Cargo, Command ]
+
+- type: documentStamp
+  id: RubberStampWarden
+  categories: [ Security ]
+
+- type: documentStamp
+  id: RubberStampDetective
+  categories: [ Security ]
+
+- type: documentStamp
+  id: RubberStampPsychologist
+  categories: [ Medical ]
+
+- type: documentStamp
+  id: RubberStampChaplain
+  categories: [ Civilian ]
+
+- type: documentStamp
+  id: RubberStampClown
+  categories: [ Civilian ]
+
+- type: documentStamp
+  id: RubberStampMime
+  categories: [ Civilian ]
+
+- type: documentStamp
+  id: RubberStampLawyer
+  categories: [ Legal, Civilian ]
+
+- type: documentStamp
+  id: RubberStampMagistrate
+  categories: [ Legal ]
+
+- type: documentStamp
+  id: RubberStampIAA
+  categories: [ Legal ]
+
+- type: documentStamp
+  id: RubberStampCentcom
+  categories: [ CentralCommand ]
+
+- type: documentStamp
+  id: RubberStampSyndicate
+  categories: [ Syndicate ]
+
+- type: documentStamp
+  id: RubberStampWizard
+  categories: [ Wizard ]
+
+- type: documentStamp
+  id: RubberStampTrader
+  categories: [ Other ]
+
+- type: documentStamp
+  id: RubberStampBase
+  categories: [ Other ]
+
+- type: documentStamp
+  id: RubberStampBaseAlt
+  categories: [ Other ]
+
+- type: documentStamp
+  id: RubberStampGreytide
+  categories: [ Other ]
+
+- type: documentStamp
+  id: RubberStampApproved
+  kind: Approve
+
+- type: documentStamp
+  id: RubberStampDenied
+  kind: Deny
