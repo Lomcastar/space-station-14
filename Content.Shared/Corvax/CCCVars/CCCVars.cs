@@ -151,4 +151,31 @@ public sealed class CCCVars
     public static readonly CVarDef<float> GhostGoLobbyDeathTimeMinutes =
         CVarDef.Create("ghost.go_lobby.death_time", 15f, CVar.SERVERONLY);
 
+    /*
+     * Document log
+     */
+
+    /// <summary>
+    /// Whether the document log records anything.
+    /// </summary>
+    public static readonly CVarDef<bool> DocumentLogEnabled =
+        CVarDef.Create("documentlog.enabled", true, CVar.SERVERONLY | CVar.ARCHIVE);
+
+    /// <summary>
+    /// Seconds a paper must stay open before the viewer counts as a reader.
+    /// </summary>
+    public static readonly CVarDef<float> DocumentLogReadThreshold =
+        CVarDef.Create("documentlog.read_threshold", 3f, CVar.SERVERONLY | CVar.ARCHIVE);
+
+    /// <summary>
+    /// Maximum number of records per round.
+    /// </summary>
+    public static readonly CVarDef<int> DocumentLogMaxRecords =
+        CVarDef.Create("documentlog.max_records", 200, CVar.SERVERONLY | CVar.ARCHIVE);
+
+    /// <summary>
+    /// Maximum length of document text kept in a record.
+    /// </summary>
+    public static readonly CVarDef<int> DocumentLogMaxTextLength =
+        CVarDef.Create("documentlog.max_text_length", 10000, CVar.SERVERONLY | CVar.ARCHIVE);
 }
