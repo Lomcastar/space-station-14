@@ -35,6 +35,8 @@ public sealed class DocumentEvent
     public EntProtoId? Stamp;
     public DocumentStampKind StampKind;
     public string? TextBefore;
+    public string? FaxFrom;
+    public string? FaxTo;
 
     /// <summary>
     /// The mark was already on the paper when the record was created; who and when is unknown.
@@ -50,6 +52,10 @@ public enum DocumentEventType : byte
     Sealed,
     Torn,
     Destroyed,
+    Sent,
+    Copied,
+    Received,
+    Printed,
 }
 
 public enum DocumentFate : byte

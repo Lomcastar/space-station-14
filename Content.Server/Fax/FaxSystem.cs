@@ -7,6 +7,7 @@ using Content.Server.Power.Components;
 using Content.Server.Tools;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Corvax.DocumentLog; // Corvax-DocumentLog
 using Content.Shared.Database;
 using Content.Shared.DeviceNetwork;
 using Content.Shared.DeviceNetwork.Components;
@@ -306,6 +307,10 @@ public sealed partial class FaxSystem : EntitySystem
                     args.Data.TryGetValue(FaxConstants.FaxPaperSenderFaxNameData, out string? senderFaxName);
 
                     var printout = new FaxPrintout(content, name, label, prototypeId, stampState, stampedBy, locked ?? false, senderFaxName);
+                    // Corvax-DocumentLog-Start
+                    args.Data.TryGetValue(FaxConstants.FaxPaperSourceDocumentData, out int? sourceDocument);
+                    printout.SourceDocument = sourceDocument;
+                    // Corvax-DocumentLog-End
                     Receive(uid, printout, args.SenderAddress);
 
                     break;
@@ -481,6 +486,12 @@ public sealed partial class FaxSystem : EntitySystem
                                        paper.StampedBy,
                                        paper.EditingDisabled);
 
+        // Corvax-DocumentLog-Start
+        printout.SourceDocument = CompOrNull<DocumentRecordComponent>(sendEntity.Value)?.RecordId;
+        var copiedEv = new FaxDocumentCopiedEvent(uid, sendEntity.Value, args.Actor, component.FaxName);
+        RaiseLocalEvent(sendEntity.Value, ref copiedEv);
+        // Corvax-DocumentLog-End
+
         component.PrintingQueue.Enqueue(printout);
         component.SendTimeoutRemaining += component.SendTimeout;
 
@@ -572,6 +583,13 @@ public sealed partial class FaxSystem : EntitySystem
             payload[FaxConstants.FaxPaperStampedByData] = paper.StampedBy;
         }
 
+        // Corvax-DocumentLog-Start
+        if (TryComp<DocumentRecordComponent>(sendEntity, out var document))
+            payload[FaxConstants.FaxPaperSourceDocumentData] = document.RecordId;
+        var sentEv = new FaxDocumentSentEvent(uid, sendEntity.Value, args.Actor, component.FaxName, faxName);
+        RaiseLocalEvent(sendEntity.Value, ref sentEv);
+        // Corvax-DocumentLog-End
+
         _deviceNetworkSystem.QueuePacket(uid, component.DestinationFaxAddress, payload);
 
         _adminLogger.Add(LogType.Action,
@@ -640,6 +658,11 @@ public sealed partial class FaxSystem : EntitySystem
         {
             _labelSystem.Label(printed, label);
         }
+
+        // Corvax-DocumentLog-Start
+        var printedEv = new FaxPaperPrintedEvent(uid, printed, printout);
+        RaiseLocalEvent(printed, ref printedEv);
+        // Corvax-DocumentLog-End
 
         _adminLogger.Add(LogType.Action, LogImpact.Low, $"\"{component.FaxName}\" {ToPrettyString(uid):tool} printed {ToPrettyString(printed):subject}: {printout.Content}");
     }

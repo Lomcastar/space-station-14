@@ -5,6 +5,7 @@ using Content.Shared.Atmos.Components;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Corvax.CCCVars;
 using Content.Shared.Corvax.DocumentLog;
+using Content.Shared.Fax.Components;
 using Content.Shared.GameTicking;
 using Content.Shared.Materials;
 using Content.Shared.Mind;
@@ -53,6 +54,9 @@ public sealed class DocumentLogSystem : EntitySystem
         SubscribeLocalEvent<EnvelopeComponent, EnvelopeStateChangedEvent>(OnEnvelopeStateChanged);
         SubscribeLocalEvent<DocumentRecordComponent, GotReclaimedEvent>(OnReclaimed);
         SubscribeLocalEvent<DocumentRecordComponent, EntityTerminatingEvent>(OnTerminating);
+        SubscribeLocalEvent<DocumentRecordComponent, FaxDocumentSentEvent>(OnFaxSent);
+        SubscribeLocalEvent<DocumentRecordComponent, FaxDocumentCopiedEvent>(OnFaxCopied);
+        SubscribeLocalEvent<PaperComponent, FaxPaperPrintedEvent>(OnFaxPrinted);
         SubscribeLocalEvent<RoundStartedEvent>(OnRoundStarted);
         SubscribeLocalEvent<RoundRestartCleanupEvent>(OnRoundRestartCleanup);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
@@ -220,6 +224,70 @@ public sealed class DocumentLogSystem : EntitySystem
             Time = _gameTicker.RoundDuration(),
             Type = DocumentEventType.Destroyed,
         });
+    }
+
+    private void OnFaxSent(Entity<DocumentRecordComponent> paper, ref FaxDocumentSentEvent args)
+    {
+        if (!_recording || !_records.TryGetValue(paper.Comp.RecordId, out var record))
+            return;
+
+        record.Events.Add(new DocumentEvent
+        {
+            Time = _gameTicker.RoundDuration(),
+            Type = DocumentEventType.Sent,
+            Actor = ResolvePerson(args.Actor),
+            FaxFrom = args.FromName,
+            FaxTo = args.ToName,
+        });
+    }
+
+    private void OnFaxCopied(Entity<DocumentRecordComponent> paper, ref FaxDocumentCopiedEvent args)
+    {
+        if (!_recording || !_records.TryGetValue(paper.Comp.RecordId, out var record))
+            return;
+
+        record.Events.Add(new DocumentEvent
+        {
+            Time = _gameTicker.RoundDuration(),
+            Type = DocumentEventType.Copied,
+            Actor = ResolvePerson(args.Actor),
+            FaxFrom = args.FaxName,
+        });
+    }
+
+    // A printed copy of a registered document becomes its own record, linked to the original.
+    private void OnFaxPrinted(Entity<PaperComponent> paper, ref FaxPaperPrintedEvent args)
+    {
+        if (!_recording || !_cfg.GetCVar(CCCVars.DocumentLogEnabled))
+            return;
+
+        if (args.Printout.SourceDocument is not { } sourceId || !_records.TryGetValue(sourceId, out var source))
+            return;
+
+        if (_records.Count >= _cfg.GetCVar(CCCVars.DocumentLogMaxRecords))
+            return;
+
+        var now = _gameTicker.RoundDuration();
+        var record = new DocumentRecord
+        {
+            Id = _nextId++,
+            CreatedAt = now,
+            Title = Name(paper),
+            Author = source.Author,
+            ParentId = source.Id,
+        };
+        _records.Add(record.Id, record);
+        EnsureComp<DocumentRecordComponent>(paper).RecordId = record.Id;
+
+        var received = args.Printout.SenderFaxName != null;
+        record.Events.Add(new DocumentEvent
+        {
+            Time = now,
+            Type = received ? DocumentEventType.Received : DocumentEventType.Printed,
+            Actor = received ? null : source.Events.LastOrDefault(e => e.Type == DocumentEventType.Copied)?.Actor,
+            FaxFrom = received ? args.Printout.SenderFaxName : CompOrNull<FaxMachineComponent>(args.Fax)?.FaxName,
+        });
+        UpdateText(record, paper);
     }
 
     private void UpdateText(DocumentRecord record, Entity<PaperComponent> paper)

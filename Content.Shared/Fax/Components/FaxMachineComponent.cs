@@ -189,6 +189,9 @@ public sealed partial class FaxPrintout
     [DataField]
     public string? SenderFaxName { get; private set; } = default!;
 
+    [DataField]
+    public int? SourceDocument { get; set; } // Corvax-DocumentLog
+
     private FaxPrintout()
     {
     }

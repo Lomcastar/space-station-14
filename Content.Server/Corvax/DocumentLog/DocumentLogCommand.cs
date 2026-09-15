@@ -70,6 +70,7 @@ public sealed class DocumentLogCommand : LocalizedEntityCommands
             ("id", record.Id),
             ("time", FormatTime(record.CreatedAt)),
             ("title", record.Title),
+            ("parent", record.ParentId is { } parent ? Loc.GetString("documentlog-command-copy-of", ("parent", parent)) : string.Empty),
             ("author", FormatPerson(record.Author))));
 
         foreach (var ev in record.Events)
@@ -130,6 +131,30 @@ public sealed class DocumentLogCommand : LocalizedEntityCommands
                 return Loc.GetString("documentlog-command-event-destroyed",
                     ("time", FormatTime(ev.Time)),
                     ("fate", Loc.GetString($"documentlog-fate-{record.Fate.ToString().ToLowerInvariant()}")));
+
+            case DocumentEventType.Sent:
+                return Loc.GetString("documentlog-command-event-sent",
+                    ("time", FormatTime(ev.Time)),
+                    ("from", ev.FaxFrom ?? "?"),
+                    ("to", ev.FaxTo ?? "?"),
+                    ("actor", FormatPerson(ev.Actor)));
+
+            case DocumentEventType.Copied:
+                return Loc.GetString("documentlog-command-event-copied",
+                    ("time", FormatTime(ev.Time)),
+                    ("fax", ev.FaxFrom ?? "?"),
+                    ("actor", FormatPerson(ev.Actor)));
+
+            case DocumentEventType.Received:
+                return Loc.GetString("documentlog-command-event-received",
+                    ("time", FormatTime(ev.Time)),
+                    ("from", ev.FaxFrom ?? "?"));
+
+            case DocumentEventType.Printed:
+                return Loc.GetString("documentlog-command-event-printed",
+                    ("time", FormatTime(ev.Time)),
+                    ("fax", ev.FaxFrom ?? "?"),
+                    ("actor", FormatPerson(ev.Actor)));
 
             default:
                 return ev.Type.ToString();
