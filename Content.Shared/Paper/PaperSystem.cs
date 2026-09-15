@@ -1,5 +1,6 @@
 using System.Linq;
 using Content.Shared.Administration.Logs;
+using Content.Shared.Corvax.DocumentLog; // Corvax-DocumentLog
 using Content.Shared.UserInterface;
 using Content.Shared.Database;
 using Content.Shared.Examine;
@@ -167,6 +168,11 @@ public sealed partial class PaperSystem : EntitySystem
             _audio.PlayPredicted(stampComp.Sound, entity, args.User);
 
             UpdateUserInterface(entity);
+
+            // Corvax-DocumentLog-Start
+            var stampedEv = new PaperStampedEvent(entity, args.User, args.Used);
+            RaiseLocalEvent(entity, ref stampedEv);
+            // Corvax-DocumentLog-End
         }
     }
 
