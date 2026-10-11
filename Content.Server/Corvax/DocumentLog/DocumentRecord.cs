@@ -1,4 +1,5 @@
 using Content.Shared.Corvax.DocumentLog;
+using Content.Shared.Paper;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server.Corvax.DocumentLog;
@@ -13,6 +14,7 @@ public sealed class DocumentRecord
     public List<DocumentEvent> Events = new();
     public List<DocumentReader> Readers = new();
     public string Text = string.Empty;
+    public List<StampDisplayInfo> Stamps = new();
     public DocumentFate Fate = DocumentFate.Intact;
 }
 

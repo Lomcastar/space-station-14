@@ -127,7 +127,7 @@ public sealed partial class DocumentLogSystem : EntitySystem
             StampKind = stamp.Kind,
         });
 
-        UpdateText(record, paper);
+        UpdateContent(record, paper);
     }
 
     private void OnPaperOpened(Entity<PaperComponent> paper, ref BoundUIOpenedEvent args)
@@ -167,7 +167,7 @@ public sealed partial class DocumentLogSystem : EntitySystem
             Actor = ResolvePerson(args.Actor),
             TextBefore = record.Text,
         });
-        UpdateText(record, (paper, paperComp));
+        UpdateContent(record, (paper, paperComp));
     }
 
     private void OnEnvelopeStateChanged(Entity<EnvelopeComponent> envelope, ref EnvelopeStateChangedEvent args)
@@ -288,13 +288,14 @@ public sealed partial class DocumentLogSystem : EntitySystem
             Actor = received ? null : source.Events.LastOrDefault(e => e.Type == DocumentEventType.Copied)?.Actor,
             FaxFrom = received ? args.Printout.SenderFaxName : CompOrNull<FaxMachineComponent>(args.Fax)?.FaxName,
         });
-        UpdateText(record, paper);
+        UpdateContent(record, paper);
     }
 
-    private void UpdateText(DocumentRecord record, Entity<PaperComponent> paper)
+    private void UpdateContent(DocumentRecord record, Entity<PaperComponent> paper)
     {
         var limit = _cfg.GetCVar(CCCVars.DocumentLogMaxTextLength);
         record.Text = paper.Comp.Content.Length <= limit ? paper.Comp.Content : paper.Comp.Content[..limit];
+        record.Stamps = new List<StampDisplayInfo>(paper.Comp.StampedBy);
     }
 
     private DocumentRecord CreateRecord(Entity<PaperComponent> paper, TimeSpan now, DocumentPerson author)

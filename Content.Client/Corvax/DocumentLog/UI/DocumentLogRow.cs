@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Numerics;
 using Content.Client.Message;
+using Content.Client.Paper.UI;
 using Content.Shared.Corvax.DocumentLog;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
@@ -47,6 +48,7 @@ public sealed class DocumentLogRow : BoxContainer
     private readonly Label _textHeading;
     private readonly RichTextLabel _text;
     private readonly Label _noText;
+    private readonly StampCollection _stamps;
     private int _shownText;
     private readonly Dictionary<int, DocumentLogDetailsEvent> _received = new();
     private bool _requested;
@@ -113,8 +115,10 @@ public sealed class DocumentLogRow : BoxContainer
         var paperContent = new BoxContainer { Orientation = LayoutOrientation.Vertical, Margin = new Thickness(10, 8) };
         _text = new RichTextLabel { HorizontalExpand = true, Visible = false };
         _noText = new Label { Text = Loc.GetString("document-log-loading"), FontColorOverride = Color.FromHex("#6E675A") };
+        _stamps = new StampCollection { HorizontalExpand = true, MinHeight = 110, Visible = false, Margin = new Thickness(0, 6, 0, 0) };
         paperContent.AddChild(_text);
         paperContent.AddChild(_noText);
+        paperContent.AddChild(_stamps);
         paper.AddChild(paperContent);
         right.AddChild(paper);
         _shownText = root.Id;
@@ -292,6 +296,10 @@ public sealed class DocumentLogRow : BoxContainer
         _shownText = recordId;
         _textHeading.Text = Loc.GetString("document-log-text-heading", ("id", recordId));
 
+        _stamps.RemoveAllChildren();
+        _stamps.RemoveStamps();
+        _stamps.Visible = false;
+
         if (!_received.TryGetValue(recordId, out var details))
         {
             _text.Visible = false;
@@ -299,6 +307,11 @@ public sealed class DocumentLogRow : BoxContainer
             _noText.Visible = true;
             return;
         }
+
+        _stamps.PlacementSeed = recordId;
+        foreach (var stamp in details.Stamps)
+            _stamps.AddStamp(new StampWidget { StampInfo = stamp });
+        _stamps.Visible = details.Stamps.Count > 0;
 
         var empty = string.IsNullOrWhiteSpace(details.Text);
         _text.Visible = !empty;

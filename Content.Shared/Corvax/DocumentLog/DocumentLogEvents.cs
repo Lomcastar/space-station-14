@@ -1,3 +1,4 @@
+using Content.Shared.Paper;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared.Corvax.DocumentLog;
@@ -83,5 +84,6 @@ public sealed class DocumentLogDetailsEvent : EntityEventArgs
 {
     public int RecordId;
     public string Text = string.Empty;
+    public List<StampDisplayInfo> Stamps = new();
     public List<DocumentLogPersonInfo> Readers = new();
 }

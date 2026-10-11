@@ -36,6 +36,7 @@ public sealed partial class DocumentLogSystem
         {
             RecordId = record.Id,
             Text = record.Text,
+            Stamps = record.Stamps,
             Readers = record.Readers.Select(r => ToInfo(r.Person)).ToList(),
         }, args.SenderSession);
     }
