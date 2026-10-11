@@ -1,5 +1,7 @@
 using System.Linq;
 using System.Numerics;
+using Content.Client.Corvax.DocumentLog.UI; // Corvax-DocumentLog
+using Content.Shared.Corvax.DocumentLog; // Corvax-DocumentLog
 using Content.Client.Message;
 using RoundEndPlayerInfo = Content.Shared.GameTicking.RoundEndMessageEvent.RoundEndPlayerInfo;
 using Robust.Client.UserInterface;
@@ -18,6 +20,7 @@ public sealed partial class RoundEndSummaryWindow : DefaultWindow
     [Dependency] private IEntityManager _entityManager = default!;
 
     public int RoundId;
+    private readonly TabContainer _tabs; // Corvax-DocumentLog
     private readonly RoundEndPlayerInfo[] _playersInfo;
     private GridContainer _playerGrid = null!;
     private readonly List<SortButton> _sortButtons = [];
@@ -51,6 +54,7 @@ public sealed partial class RoundEndSummaryWindow : DefaultWindow
 
         RoundId = roundId;
         var roundEndTabs = new TabContainer();
+        _tabs = roundEndTabs; // Corvax-DocumentLog
         roundEndTabs.AddChild(MakeRoundEndSummaryTab(gm, roundEnd, roundTimeSpan, roundId));
         roundEndTabs.AddChild(MakePlayerManifestTab());
 
@@ -59,6 +63,13 @@ public sealed partial class RoundEndSummaryWindow : DefaultWindow
         OpenCenteredRight();
         MoveToFront();
     }
+
+    // Corvax-DocumentLog-Start
+    public void AddDocumentLogTab(DocumentLogSnapshotEvent snapshot)
+    {
+        _tabs.AddChild(new DocumentLogTab(snapshot));
+    }
+    // Corvax-DocumentLog-End
 
     private static BoxContainer MakeRoundEndSummaryTab(string gamemode, string roundEnd, TimeSpan roundDuration, int roundId)
     {
